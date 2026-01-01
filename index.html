@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شجرة العائلة</title>
+
+  <!-- ✅ عدّلنا المسار ليطابق اسم ملفك الحالي -->
+  <link rel="stylesheet" href="cssmain.css" />
+</head>
+
+<body>
+
+  <!-- لوحة الإحصائيات (مطابقة لما يتوقعه tree.js) -->
+  <div class="panel stats-panel">
+    <h2>📊 إحصائيات</h2>
+
+    <div class="stat">
+      <span class="stat-label">عدد الأفراد</span>
+      <span class="stat-value" id="members">0</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">عدد الأجيال</span>
+      <span class="stat-value" id="gens">0</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">وزن اليسار</span>
+      <span class="stat-value" id="leftW">0</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">وزن اليمين</span>
+      <span class="stat-value" id="rightW">0</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">التوازن</span>
+      <span class="stat-value good" id="balance">0%</span>
+    </div>
+
+    <div class="hint">
+      🖱️ سحب الشاشة للتنقل — 🖲️ عجلة الماوس للتقريب/التبعيد — 🫳 اسحب الورقة لتغيير موضعها
+    </div>
+  </div>
+
+  <!-- لوحة التحكم (مطابقة للـ IDs التي يربطها tree.js) -->
+  <div class="panel controls-panel">
+    <h2>🎛️ التحكم بالشجرة</h2>
+      
+      <div class="panel-block">
+  <label for="csvFile">CSV File:</label>
+  <input id="csvFile" type="file" accept=".csv,.xls,.xlsx,.tsv,.txt">
+
+  <label for="colId">Column: ID</label>
+  <select id="colId"></select>
+
+  <label for="colParent">Column: Parent</label>
+  <select id="colParent"></select>
+
+  <label for="colName">Column: Name</label>
+  <select id="colName"></select>
+
+
+  <label for="levelInput">عرض حتى مستوى الجيل:</label>
+  <input id="levelInput" type="number" min="0" value="0" style="width:100%;margin-bottom:10px;" />
+
+  <button id="applyCols">Apply</button>
+
+  <div id="csvStatus" style="font-size:12px;opacity:.85"></div>
+  <!-- شريط التقدم لمعالجة CSV -->
+  <div id="csvProgressBarContainer" style="display:none;">
+    <div id="csvProgressBarBg" style="width:100%;height:13px;background:#e3eaf2;border-radius:7px;overflow:hidden;">
+      <div id="csvProgressBar" style="width:0%;height:100%;background:#1976d2;transition:width 0.3s;"></div>
+    </div>
+    <div id="csvProgressText" style="font-size:12px;text-align:center;margin-top:2px;color:#1976d2;"></div>
+  </div>
+</div>
+
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>ميل الفروع (يمين/يسار)</span>
+        <span class="control-value" id="rightBiasValue">50%</span>
+      </div>
+      <input type="range" id="rightBias" min="0" max="100" value="50" step="1" />
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>حجم الأوراق</span>
+        <span class="control-value" id="leafSizeValue">13</span>
+      </div>
+      <input type="range" id="leafSize" min="8" max="30" value="13" step="1" />
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>حجم الخط</span>
+        <span class="control-value" id="fontSizeValue">9px</span>
+      </div>
+      <input type="range" id="fontSize" min="6" max="16" value="9" step="1" />
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>المسافة بين الأوراق</span>
+        <span class="control-value" id="spacingValue">90px</span>
+      </div>
+      <input type="range" id="spacing" min="50" max="150" value="90" step="5" />
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>عرض الجذع</span>
+        <span class="control-value" id="trunkWidthValue">90px</span>
+      </div>
+      <input type="range" id="trunkWidth" min="50" max="150" value="90" step="5" />
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>ارتفاع الجذع</span>
+        <span class="control-value" id="trunkHeightValue">300px</span>
+      </div>
+      <input type="range" id="trunkHeight" min="200" max="500" value="300" step="10" />
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>سماكة الفروع</span>
+        <span class="control-value" id="branchThicknessValue">1.0x</span>
+      </div>
+      <input type="range" id="branchThickness" min="0.5" max="2.0" value="1.0" step="0.1" />
+    </div>
+
+    <div class="control-group">
+      <div class="control-label">
+        <span>انحناء الجاذبية</span>
+        <span class="control-value" id="gravityValue">4x</span>
+      </div>
+      <input type="range" id="gravity" min="0" max="10" value="4" step="0.5" />
+    </div>
+
+    <h3>🎨 الألوان</h3>
+    <div class="color-controls">
+      <div class="color-item">
+        <span>ورقة 1</span><input type="color" id="leafColor1" value="#C8E6C9" />
+      </div>
+      <div class="color-item">
+        <span>ورقة 2</span><input type="color" id="leafColor2" value="#A5D6A7" />
+      </div>
+      <div class="color-item">
+        <span>ورقة 3</span><input type="color" id="leafColor3" value="#81C784" />
+      </div>
+      <div class="color-item">
+        <span>ورقة 4</span><input type="color" id="leafColor4" value="#66BB6A" />
+      </div>
+
+      <div class="color-item">
+        <span>الجذر</span><input type="color" id="rootColor" value="#8B4513" />
+      </div>
+      <div class="color-item">
+        <span>الفروع</span><input type="color" id="branchColor" value="#D4AF37" />
+      </div>
+      <div class="color-item">
+        <span>نقطة</span><input type="color" id="nodeColor" value="#FF6B6B" />
+      </div>
+      <div class="color-item">
+        <span>النص</span><input type="color" id="textColor" value="#FFFFFF" />
+      </div>
+    </div>
+
+    <h3>🎮 أدوات</h3>
+    <button class="btn toggle-btn" id="axisBtn" onclick="app.toggleAxis()">إظهار المحور</button>
+    <button class="btn btn-secondary" onclick="app.reset()">🔄 إعادة ضبط العرض</button>
+    <button class="btn" onclick="app.rebuild()">♻️ إعادة بناء الشجرة</button>
+    <button class="btn btn-secondary" onclick="app.resetCustomPositions()">↺ إعادة ضبط المواضع المخصصة</button>
+    <button class="btn btn-secondary" onclick="app.resetDefaults()">🧩 استعادة الإعدادات الافتراضية</button>
+    <button class="btn" onclick="app.exportImage()">📸 حفظ كصورة</button>
+  </div>
+
+  <!-- لوحة كود الإعدادات -->
+  <div class="panel settings-panel">
+    <h2>💾 كود الإعدادات الحالية</h2>
+    <button class="copy-btn" onclick="app.copySettings()">📋 نسخ</button>
+    <pre id="settingsCode"></pre>
+  </div>
+
+  <!-- منطقة الرسم -->
+  <canvas id="canvas"></canvas>
+
+  <!-- Tooltip -->
+  <div id="tooltip"></div>
+
+  <!-- ✅ الترتيب الصحيح: البيانات ثم المنطق -->
+  <script src="jsdata.js"></script>
+  <script src="csv_loader_generic.js"></script>
+  <script>attachGenericCSVLoader();</script>
+  <script src="tree.js"></script>
+
+  <!-- ❌ لا نحمّل app.js لأن tree.js ينشئ app بنفسه -->
+</body>
+</html>
